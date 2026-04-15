@@ -24,13 +24,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p _deploy
+          cp index.html _deploy/
+          cp -r exercises _deploy/
+          cp -r dist _deploy/
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload exercises as artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './exercises'
+          path: './_deploy'
 
       - name: Deploy to GitHub Pages
         id: deployment

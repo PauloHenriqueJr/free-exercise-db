@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniWell — Biblioteca de Exercícios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0F0F10;
+      color: #fff;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, rgba(255,106,26,0.12), rgba(15,15,16,1) 60%);
+      padding: 40px 20px 30px;
+      text-align: center;
+      border-bottom: 1px solid #1D1D21;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FF6A1A, #FF8F4A);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .header p { color: #6F6F74; font-size: 14px; }
+    .controls {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .search-box {
+      width: 100%;
+      padding: 14px 18px;
+      background: #151517;
+      border: 1px solid #1D1D21;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus { border-color: #FF6A1A; }
+    .search-box::placeholder { color: #6F6F74; }
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 14px;
+      background: #151517;
+      border: 1px solid #1D1D21;
+      border-radius: 8px;
+      color: #B8B8B8;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: #FF6A1A; color: #fff; }
+    .filter-btn.active {
+      background: rgba(255,106,26,0.15);
+      border-color: #FF6A1A;
+      color: #FF6A1A;
+    }
+    .stats {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px 12px;
+      color: #6F6F74;
+      font-size: 13px;
+    }
+    .grid {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: #151517;
+      border: 1px solid #1D1D21;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .card:hover {
+      border-color: #FF6A1A;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255,106,26,0.1);
+    }
+    .card-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: #1D1D21;
+      display: block;
+    }
+    .card-body { padding: 14px; }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tag-muscle { background: rgba(255,106,26,0.15); color: #FF6A1A; }
+    .tag-equip { background: rgba(56,189,248,0.12); color: #38BDF8; }
+    .tag-level { background: rgba(52,211,153,0.12); color: #34D399; }
+    .tag-level.intermediate { background: rgba(251,191,36,0.12); color: #FBBF24; }
+    .tag-level.expert { background: rgba(239,68,68,0.12); color: #EF4444; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #151517;
+      border: 1px solid #1D1D21;
+      border-radius: 16px;
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: #1D1D21;
+    }
+    .modal-body { padding: 24px; }
+    .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .modal-subtitle { font-size: 14px; color: #6F6F74; font-style: italic; margin-bottom: 16px; }
+    .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #FF6A1A;
+      margin-bottom: 8px;
+    }
+    .modal-section p {
+      font-size: 14px;
+      color: #B8B8B8;
+      line-height: 1.7;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-wrapper { position: relative; }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6F6F74;
+      font-size: 16px;
+    }
+    .loading {
+      text-align: center;
+      padding: 80px;
+      color: #FF6A1A;
+    }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Biblioteca de Exercícios</h1>
+    <p>800+ exercícios com demonstração animada</p>
+  </div>
+
+  <div class="controls">
+    <input type="text" class="search-box" id="search" placeholder="Buscar exercício..." autocomplete="off">
+    <div class="filters" id="filters"></div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="grid" id="grid"><div class="loading">Carregando exercícios...</div></div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal-wrapper">
+      <div class="modal">
+        <button class="modal-close" id="modalClose">✕</button>
+        <img class="modal-img" id="modalImg">
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE = './';
+    const musclesPt = {
+      chest:'Peito', 'middle back':'Costas Média', 'lower back':'Lombar',
+      lats:'Dorsal', traps:'Trapézio', neck:'Pescoço', shoulders:'Ombros',
+      biceps:'Bíceps', triceps:'Tríceps', forearms:'Antebraço',
+      quadriceps:'Quadríceps', hamstrings:'Posterior', glutes:'Glúteos',
+      calves:'Panturrilha', abdominals:'Abdômen', abductors:'Abdutores',
+      adductors:'Adutores'
+    };
+    const equipPt = {
+      barbell:'Barra', dumbbell:'Halteres', cable:'Cabo', machine:'Máquina',
+      'body only':'Peso Corporal', kettlebells:'Kettlebell', bands:'Elástico',
+      'medicine ball':'Medicine Ball', 'exercise ball':'Bola', 'foam roll':'Foam Roller',
+      'e-z curl bar':'Barra EZ', other:'Outro'
+    };
+    const levelPt = { beginner:'Iniciante', intermediate:'Intermediário', expert:'Avançado' };
+    const catPt = {
+      strength:'Força', stretching:'Alongamento', plyometrics:'Pliometria',
+      cardio:'Cardio', powerlifting:'Powerlifting',
+      'olympic weightlifting':'LPO', strongman:'Strongman'
+    };
+    const muscleFilters = ['chest','shoulders','biceps','triceps','lats','middle back','lower back',
+      'traps','quadriceps','hamstrings','glutes','calves','abdominals','forearms'];
+
+    let exercises = [];
+    let activeFilter = null;
+    let animTimers = new Map();
+
+    async function init() {
+      const res = await fetch('./dist/exercises.json');
+      exercises = await res.json();
+      renderFilters();
+      render();
+    }
+
+    function renderFilters() {
+      const el = document.getElementById('filters');
+      el.innerHTML = muscleFilters.map(m =>
+        `<button class="filter-btn" data-muscle="${m}">${musclesPt[m]||m}</button>`
+      ).join('');
+      el.addEventListener('click', e => {
+        if (!e.target.classList.contains('filter-btn')) return;
+        const m = e.target.dataset.muscle;
+        activeFilter = activeFilter === m ? null : m;
+        el.querySelectorAll('.filter-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.muscle === activeFilter)
+        );
+        render();
+      });
+    }
+
+    function getFiltered() {
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      return exercises.filter(ex => {
+        if (activeFilter && !(ex.primaryMuscles||[]).includes(activeFilter)) return false;
+        if (q && !ex.name.toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }
+
+    function render() {
+      animTimers.forEach(t => clearInterval(t));
+      animTimers.clear();
+      const filtered = getFiltered();
+      document.getElementById('stats').textContent = `${filtered.length} exercício${filtered.length!==1?'s':''}`;
+      const grid = document.getElementById('grid');
+      if (!filtered.length) { grid.innerHTML = '<div class="empty">Nenhum exercício encontrado</div>'; return; }
+      grid.innerHTML = filtered.map(ex => {
+        const muscle = (ex.primaryMuscles||[])[0] || '';
+        const lvl = ex.level || 'beginner';
+        return `<div class="card" data-id="${ex.id}">
+          <img class="card-img" data-id="${ex.id}" src="${BASE}${ex.id}/0.jpg" loading="lazy" alt="${ex.name}">
+          <div class="card-body">
+            <div class="card-title">${ex.name}</div>
+            <div class="card-tags">
+              <span class="tag tag-muscle">${musclesPt[muscle]||muscle}</span>
+              ${ex.equipment?`<span class="tag tag-equip">${equipPt[ex.equipment]||ex.equipment}</span>`:''}
+              <span class="tag tag-level ${lvl}">${levelPt[lvl]||lvl}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Animate images
+      grid.querySelectorAll('.card-img').forEach(img => {
+        const id = img.dataset.id;
+        let show1 = false;
+        const timer = setInterval(() => {
+          show1 = !show1;
+          img.src = `${BASE}${id}/${show1?1:0}.jpg`;
+        }, 1000);
+        animTimers.set(id, timer);
+      });
+
+      // Card click → modal
+      grid.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => openModal(card.dataset.id));
+      });
+    }
+
+    function openModal(id) {
+      const ex = exercises.find(e => e.id === id);
+      if (!ex) return;
+      const modal = document.getElementById('modal');
+      const img = document.getElementById('modalImg');
+      img.src = `${BASE}${id}/0.jpg`;
+      let showAlt = false;
+      if (window._modalTimer) clearInterval(window._modalTimer);
+      window._modalTimer = setInterval(() => {
+        showAlt = !showAlt;
+        img.src = `${BASE}${id}/${showAlt?1:0}.jpg`;
+      }, 900);
+
+      const muscle = (ex.primaryMuscles||[])[0]||'';
+      const sec = (ex.secondaryMuscles||[]).map(m=>musclesPt[m]||m).join(', ');
+      const lvl = ex.level||'beginner';
+      const instructions = (ex.instructions||[]).map((s,i)=>`${i+1}. ${s}`).join('\n\n');
+
+      document.getElementById('modalBody').innerHTML = `
+        <div class="modal-title">${ex.name}</div>
+        <div class="modal-tags">
+          <span class="tag tag-muscle">${musclesPt[muscle]||muscle}</span>
+          ${sec?`<span class="tag tag-muscle" style="opacity:0.7">${sec}</span>`:''}
+          ${ex.equipment?`<span class="tag tag-equip">${equipPt[ex.equipment]||ex.equipment}</span>`:''}
+          <span class="tag tag-level ${lvl}">${levelPt[lvl]||lvl}</span>
+          ${ex.category?`<span class="tag tag-equip">${catPt[ex.category]||ex.category}</span>`:''}
+        </div>
+        ${instructions?`<div class="modal-section">
+          <div class="modal-section-title">Instruções</div>
+          <p>${instructions.replace(/\n/g,'<br>')}</p>
+        </div>`:''}
+        ${ex.force?`<div class="modal-section">
+          <div class="modal-section-title">Tipo de Força</div>
+          <p>${ex.force==='push'?'Empurrar':ex.force==='pull'?'Puxar':'Estático'}</p>
+        </div>`:''}
+      `;
+      modal.classList.add('open');
+    }
+
+    document.getElementById('modalClose').addEventListener('click', () => {
+      document.getElementById('modal').classList.remove('open');
+      if (window._modalTimer) clearInterval(window._modalTimer);
+    });
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target.id === 'modal') {
+        document.getElementById('modal').classList.remove('open');
+        if (window._modalTimer) clearInterval(window._modalTimer);
+      }
+    });
+
+    document.getElementById('search').addEventListener('input', render);
+    init();
+  </script>
+</body>
+</html>
